@@ -13,3 +13,5 @@ julia> env = FrankaPickup();
 julia> jacctrl(env);
 
 ```
+
+To move around the object you can double click on it, then ctrl click and drag it to move.
