@@ -10,8 +10,14 @@ using Statistics, StaticArrays, UnsafeArrays
 using Base.Iterators
 #using Distributions, Distances
 using MuJoCo
+using JLSO
+using Flux
 
 #using Optim
+
+function INTEL_DRIVER()
+   ENV["MESA_LOADER_DRIVER_OVERRIDE"] = "i965"
+end
 
 include("franka.jl")
 
@@ -76,7 +82,7 @@ function mpcctrl(env::FrankaPickup; H=10, K=4, σ=0.3, λ=0.1)
                K = K,
                gamma = 1.0,
                # The following is for position control based MPC
-               initfn! = (meantraj) -> @inbounds @views meantraj[:, end] .= meantraj[:, end-1]
+               #initfn! = (meantraj) -> @inbounds @views meantraj[:, end] .= meantraj[:, end-1]
               )
    mppi.meantrajectory .= env.sim.d.qpos[1:8]
    env.sim.d.ctrl .= env.sim.d.qpos[1:8]
@@ -89,4 +95,22 @@ function mpcctrl(env::FrankaPickup; H=10, K=4, σ=0.3, λ=0.1)
       forward!(env.sim)
    end
    visualize(env, controller=mpcctrlfn, windowsize=LyceumMuJoCoViz.RES_HD)
+end
+
+
+function vizpolicy(env::FrankaPickup, f)
+   d = JLSO.load(f)
+   states = d[:stocstates][:states][1]
+   policy = d[:policy]
+
+   obs = getobs(env) # pre-allocate
+
+   function policyctrl(env)
+      getobs!(obs, env)
+      setaction!(env, policy(obs))
+      forward!(env.sim)
+   end
+
+   visualize(env, controller=policyctrl, trajectories=states,
+             windowsize=LyceumMuJoCoViz.RES_HD)
 end
