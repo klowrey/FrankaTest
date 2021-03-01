@@ -4,6 +4,7 @@ authors = ["klowrey <kendall.lowrey@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 Lyceum = "f25b5985-59c0-418b-a573-42c079f3f644"
 LyceumAI = "6917c76a-ac01-4302-a33e-8c456ab70f71"

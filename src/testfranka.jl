@@ -65,19 +65,21 @@ function jacctrl(env::FrankaPickup, gain=10.0)
    visualize(env, controller=ctrlfn, windowsize=LyceumMuJoCoViz.RES_HD)
 end
 
-function mpcctrl(env::FrankaPickup; H=10, K=4)
+function mpcctrl(env::FrankaPickup; H=10, K=4, σ=0.3, λ=0.1)
    state = zeros(length(statespace(env)))
    action = zeros(length(actionspace(env)))
 
-   mppi = MPPI(env_tconstructor = n -> tconstruct(etype, n),
-               covar = Diagonal(0.3 * I, size(actionspace(env), 1)),
-               lambda = 0.1,
+   mppi = MPPI(env_tconstructor = n -> tconstruct(FrankaPickup, n),
+               covar = Diagonal(σ * I, size(actionspace(env), 1)),
+               lambda = λ,
                H = H,
                K = K,
                gamma = 1.0,
                # The following is for position control based MPC
-               #initfn! = (meantraj) -> @inbounds @views meantraj[:, end] .= meantraj[:, end-1]
+               initfn! = (meantraj) -> @inbounds @views meantraj[:, end] .= meantraj[:, end-1]
               )
+   mppi.meantrajectory .= env.sim.d.qpos[1:8]
+   env.sim.d.ctrl .= env.sim.d.qpos[1:8]
 
    function mpcctrlfn(env)
       getstate!(state, env)

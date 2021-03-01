@@ -124,9 +124,9 @@
           </body>
         </body>
       </body>
-      <body name='box_body' pos='0.6 0 0.015'>
+      <body name='box_body' pos='0.8 0 0.02'>
         <freejoint/>
-        <geom group='1' size='0.015 0.015 0.015' type='box' name='mybox' rgba='1 0 0 1' mass='0.1' contype='1' conaffinity='1' />
+        <geom group='1' size='0.02 0.02 0.02' type='box' name='mybox' rgba='1 0 0 1' mass='0.2' contype='1' conaffinity='1' />
       </body>
     </worldbody>
 
@@ -167,7 +167,7 @@
     </actuator>
 
     <keyframe>
-      <key qpos='0 0.3 0 -1.2 0 1.6 0.0 0.04 -0.04      0.6 0 0.015 1 0 0 0'/>
+      <key qpos='0 0.3 0 -1.2 0 1.6 0.0 0.04 -0.04      0.8 0 0.02 1 0 0 0'/>
     </keyframe>
   </mujoco>
 
