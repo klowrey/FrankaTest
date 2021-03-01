@@ -1,6 +1,6 @@
 
 using LyceumMuJoCo: fastreset_nofwd!
-using Distances
+using Distances, Distributions
 
 struct FrankaPickup{S<:MJSim, A, O} <: AbstractMuJoCoEnvironment
    sim::S
