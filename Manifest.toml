@@ -348,9 +348,9 @@ version = "1.2.0"
 
 [[JLSO]]
 deps = ["BSON", "CodecZlib", "FilePathsBase", "Memento", "Pkg", "Serialization"]
-git-tree-sha1 = "85124b548bf4c2bb59284d353aa09ffc224d761f"
+git-tree-sha1 = "7c1a7948ef16218e7e6aa0e9ca7368557d7185c7"
 uuid = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
-version = "2.4.0"
+version = "2.5.0"
 
 [[JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
