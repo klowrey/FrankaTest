@@ -15,7 +15,8 @@ include("franka.jl")
 
 function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed())
     etype = FrankaPickup
-    BLAS.set_num_threads(Threads.nthreads())
+    #BLAS.set_num_threads(Threads.nthreads())
+    BLAS.set_num_threads(1)
     seed_threadrngs!(seed)
 
     e = etype()
@@ -33,8 +34,15 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
     policy.meanNN[end].W .*= 1e-2
     policy.meanNN[end].b .*= 1e-2
 
-    value = multilayer_perceptron(dobs, 64, 64, 1, σ=Flux.relu) #, initb=glorot_uniform, initb_final=glorot_uniform)
-    valueloss(bl, X, Y) = mse(vec(bl(X)), vec(Y))
+    timefeaturizer = LyceumAI.TimeFeatures{DT}(
+                                                [1, 2, 3, 4],
+                                                [1, 1, 1, 1],
+                                                1 / 1000
+                                               )
+    value = multilayer_perceptron(dobs+length(timefeaturizer.orders), 64, 64, 1, σ=Flux.relu) #, initb=glorot_uniform, initb_final=glorot_uniform)
+    valueloss(bl, X, Y) = begin 
+        mse(vec(bl(X)), vec(Y))
+    end
 
     valuetrainer = FluxTrainer(
         optimiser = ADAM(1e-3),
@@ -44,11 +52,6 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
     )
     value = Flux.paramtype(DT, value)
 
-    timefeatureizer = LyceumAI.TimeFeatures{DT}(
-        [1, 2, 3],
-        [1, 1, 1],
-        1 / 1000
-    )
 
     npg = NaturalPolicyGradient(
         n -> tconstruct(etype, n),
@@ -60,7 +63,7 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
         Hmax=Hmax,
         norm_step_size=0.1,
         N=N,
-        value_feature_op = timefeatureizer
+        value_feature_op = timefeaturizer
     )
 
     envname = lowercase(string(nameof(etype)))
@@ -68,8 +71,11 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
 
     lg = ULogger()
 
+    log = Dict()
     for (i, state) in enumerate(npg)
         if i > niters
+            push!(lg, :meanbatch, state.meanbatch)
+            push!(lg, :stocbatch, state.stocbatch)
             break
         end
 
@@ -79,13 +85,19 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
             x = lg[:algstate]
             display(expplot(
                 Line(x[:stoctraj_reward], "StocR"),
-                title="NPG Iteration=$i", width=60, height=10
-            ))
-
-            display(expplot(
                 Line(x[:meantraj_reward], "MeanR"),
-                title="NPG Iteration=$i", width=60, height=10
+                title="NPG Iteration=$i", width=50, height=6
             ))
+            display(expplot(
+                Line(x[:stoctraj_eval], "Stoc Eval"),
+                Line(x[:meantraj_eval], "Mean Eval"),
+                width=50, height=6
+            ))
+            println("elapsed_sampled  = $(state.elapsed_sampled)")
+            println("elapsed_gradll   = $(state.elapsed_gradll)")
+            println("elapsed_vpg      = $(state.elapsed_vpg)")
+            println("elapsed_cg       = $(state.elapsed_cg)")
+            println("elapsed_valuefit = $(state.elapsed_valuefit)")
         end
     end
 
@@ -93,8 +105,8 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
               :policy => npg.policy,
               :value => npg.value,
               :etype => etype,
-              :meanstates => state.meanbatch,
-              :stocstates => state.stocbatch,
+              :meanstates => lg[:meanbatch],
+              :stocstates => lg[:stocbatch],
               :prng_seed => seed,
               :algstate => lg[:algstate])
 

@@ -11,7 +11,7 @@ struct FrankaPickup{S<:MJSim, O} <: AbstractMuJoCoEnvironment
         m = sim.m
         osp = MultiShape(qpos = VectorShape(Float64, m.nq-7), # no object
                          qvel = VectorShape(Float64, m.nv),
-                         eff  = VectorShape(Float64, m.nv),
+                         #eff  = VectorShape(Float64, m.nv),
                          obj  = VectorShape(Float64, 3),
                          hand = VectorShape(Float64, 3), # chopstick site
                          d_obj  = ScalarShape(Float64), # distance
@@ -26,7 +26,7 @@ end
 
 function tconstruct(::Type{FrankaPickup}, n::Integer)
     modelpath = joinpath(@__DIR__, "franka.xml")
-    return Tuple(FrankaPickup(s) for s in LyceumBase.tconstruct(MJSim, n, modelpath, skip = 1))
+    return Tuple(FrankaPickup(s) for s in LyceumBase.tconstruct(MJSim, n, modelpath, skip = 3))
 end
 FrankaPickup() = first(tconstruct(FrankaPickup, 1))
 
