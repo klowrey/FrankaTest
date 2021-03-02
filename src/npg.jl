@@ -22,27 +22,26 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
     e = etype()
     dobs, dact = length(obsspace(e)), length(actionspace(e))
 
-    DT = Float32
+    DT = Float64
     Hmax, K = 500, 32
     N = Hmax * K
 
     policy = DiagGaussianPolicy(
-        multilayer_perceptron(dobs, 64, 64, dact, σ=tanh), #initb=zeros, initb_final=glorot_uniform),
+        multilayer_perceptron(dobs, 64, 64, dact, σ=tanh),
         ones(dact) .*= -0.5
     )
     policy = paramtype(DT, policy)
-    policy.meanNN[end].W .*= 1e-2
-    policy.meanNN[end].b .*= 1e-2
+    policy.meanNN[end].W .*= 1e-1
+    policy.meanNN[end].b .*= 1e-1
 
     timefeaturizer = LyceumAI.TimeFeatures{DT}(
                                                 [1, 2, 3, 4],
                                                 [1, 1, 1, 1],
                                                 1 / 1000
                                                )
-    value = multilayer_perceptron(dobs+length(timefeaturizer.orders), 64, 64, 1, σ=Flux.relu) #, initb=glorot_uniform, initb_final=glorot_uniform)
-    valueloss(bl, X, Y) = begin 
-        mse(vec(bl(X)), vec(Y))
-    end
+    value = multilayer_perceptron(dobs+length(timefeaturizer.orders),
+                                  64, 64, 1, σ=Flux.relu)
+    valueloss(bl, X, Y) =  mse(vec(bl(X)), vec(Y))
 
     valuetrainer = FluxTrainer(
         optimiser = ADAM(1e-3),
@@ -61,7 +60,7 @@ function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed()
         gaelambda = 0.97,
         valuetrainer,
         Hmax=Hmax,
-        norm_step_size=0.1,
+        norm_step_size=0.05,
         N=N,
         value_feature_op = timefeaturizer
     )

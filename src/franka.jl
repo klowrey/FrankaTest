@@ -37,16 +37,16 @@ FrankaPickup() = first(tconstruct(FrankaPickup, 1))
 @inline LyceumMuJoCo.actionspace(env::FrankaPickup) = env.asp
 
 @propagate_inbounds function LyceumMuJoCo.getaction!(a, env::FrankaPickup)
-   a .= env.sim.d.ctrl[1:8] # only read the position controllers
+   a .= @view env.sim.d.ctrl[1:8] # only read the position controllers
 end
 @propagate_inbounds function LyceumMuJoCo.setaction!(env::FrankaPickup, a)
-   env.sim.d.ctrl[1:8] .= a # only write the position controllers
+    @view(env.sim.d.ctrl[1:8]) .= a # only write the position controllers
 end
 
 # This function sets to the key_qpos but also sets the controls assuming it's position controllers
 function keypos_position(sim)
    key_qpos = sim.m.key_qpos ## TODO OBJECT ## TODO OBJECT
-   @uviews key_qpos @inbounds sim.d.qpos .= view(key_qpos,:,1) # noalloc
+   @inbounds sim.d.qpos .= view(key_qpos,:,1) # noalloc
    sim.d.ctrl[4] = -1.2   # when using position control
    sim.d.ctrl[6] = 1.6
    sim.d.ctrl[8] = 0.04
@@ -61,12 +61,17 @@ end
 
 @propagate_inbounds function LyceumMuJoCo.randreset!(rng::Random.AbstractRNG, env::FrankaPickup)
    fastreset_nofwd!(env.sim)
-   keypos_position(env.sim)
    d = env.sim.d
+   range = env.sim.m.actuator_ctrlrange
+   for i=1:9
+       j = rand(Uniform(range[1,i], range[2,i])) / 2.0
+       d.qpos[i] = j
+       d.ctrl[i] = j
+   end
    # changes the position of the object
-   d.qpos[end-2] = rand(rng, Uniform(0.4, 0.7))
-   d.qpos[end-1] = rand(rng, Uniform(-0.3, 0.3))
-   d.qpos[end-0] = 0.015
+   d.qpos[end-6] = rand(rng, Uniform(0.4, 0.7)) # x 
+   d.qpos[end-5] = rand(rng, Uniform(-0.3, 0.3)) # y
+   d.qpos[end-4] = 0.015 # z
    forward!(env.sim)
    env
 end
@@ -105,11 +110,8 @@ end
    _obj2goal = o.d_goal / 0.5
 
    reward = -_fing2obj
-   if _fing2obj < 0.006
-      reward = 2.0 - 2.0 * _obj2goal 
-      #reward -= 0.5 * o.qpos[8] # close the gripper when close to object
-   else
-      reward += 0.5 * o.qpos[8] # open the gripper when away from object
+   if _fing2obj < 0.03
+      reward = 2.0 - 2.0 * _obj2goal
    end
    reward
 end
