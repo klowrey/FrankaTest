@@ -3,7 +3,7 @@ using LinearAlgebra, Random, Statistics
 using Flux
 using Flux: glorot_uniform, paramtype
 
-using UnicodePlots, StaticArrays, JLSO, UnsafeArrays, Distributions
+using UnicodePlots, StaticArrays, JLSO, Distributions
 
 using LyceumBase, LyceumAI, LyceumMuJoCo, MuJoCo, UniversalLogger, Shapes
 using LyceumBase.Tools
@@ -14,10 +14,11 @@ using Base: @propagate_inbounds
 include("franka.jl")
 
 function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed())
+    
     etype = FrankaPickup
     #BLAS.set_num_threads(Threads.nthreads())
     BLAS.set_num_threads(1)
-    seed_threadrngs!(seed)
+    LyceumBase.Tools.seed_threadrngs!(seed)
 
     e = etype()
     dobs, dact = length(obsspace(e)), length(actionspace(e))

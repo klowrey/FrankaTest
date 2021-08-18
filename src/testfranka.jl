@@ -6,7 +6,7 @@ using Base: @propagate_inbounds
 using Random
 import LyceumBase: tconstruct, _rollout
 using LyceumMuJoCo: fastreset_nofwd!
-using Statistics, StaticArrays, UnsafeArrays
+using Statistics, StaticArrays
 using Base.Iterators
 #using Distributions, Distances
 using MuJoCo
