@@ -46,7 +46,7 @@ end
 function jacctrl(env::FrankaPickup, gain=10.0)
    jacp = zeros(env.sim.m.nv, 3)
    jacr = zeros(env.sim.m.nv, 3)
-   ctrl = zeros(env.sim.m.nu)
+   ctrl = zeros(length(actionspace(env)))
    positiondelta = zeros(3)
 
    function ctrlfn(env)
@@ -85,7 +85,7 @@ function mpcctrl(env::FrankaPickup; H=10, K=4, σ=0.3, λ=0.1)
                #initfn! = (meantraj) -> @inbounds @views meantraj[:, end] .= meantraj[:, end-1]
               )
    mppi.meantrajectory .= env.sim.d.qpos[1:8]
-   env.sim.d.ctrl .= env.sim.d.qpos[1:8]
+   env.sim.d.ctrl[1:8] .= env.sim.d.qpos[1:8]
 
    function mpcctrlfn(env)
       getstate!(state, env)
