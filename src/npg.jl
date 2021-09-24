@@ -13,7 +13,7 @@ using Base: @propagate_inbounds
 
 include("franka.jl")
 
-function runNPG(; niters=200, plotiter=div(niters,10), seed = Random.make_seed())
+function runNPG(; niters=200, plotiter=div(niters,min(10,niters)), seed = Random.make_seed())
     
     etype = FrankaPickup
     #BLAS.set_num_threads(Threads.nthreads())
